@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>talk</title>
+		<style>
+			body {
+				margin: 0;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+		<script>
+			const commandQue = []
+			function generateRandomName() {
+				const alphabet = 'abcdefghijklmnopqrstuvwxyz'
+				const nameLength = Math.floor(Math.random() * 6) + 5 // 生成 5~10 之间的随机长度
+				let randomName = ''
+
+				for (let i = 0; i < nameLength; i++) {
+					const randomIndex = Math.floor(Math.random() * alphabet.length)
+					randomName += alphabet[randomIndex]
+				}
+
+				return randomName
+			}
+
+			async function apiRegister(randomName) {
+				const postData = {
+					name: randomName,
+				}
+
+				const response = await fetch('/user/register', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(postData),
+				})
+				const data = await response.json()
+				return data
+			}
+
+			function initSocket(token) {
+				return new Promise((resove) => {
+					const socket = io('/', {
+						query: { token: token },
+					})
+
+					socket.on('connect', () => {
+						console.log('Connected to server')
+						resove(socket)
+					})
+
+					socket.on('message', (data) => {
+						console.log('Received message:', data)
+					})
+
+					socket.on('newUser', ({ userInfo }) => {
+						console.dir(userInfo)
+					})
+
+					socket.on('userLeave', ({ userInfo }) => {
+						console.dir(userInfo)
+					})
+				})
+			}
+
+			async function initapp() {
+				const randomName = generateRandomName()
+				const { token, userInfo, otherusers } = await apiRegister(randomName)
+
+				const socket = await initSocket(token)
+				
+				socket.emit('message', { msg: 'ononon' })
+			}
+
+			initapp()
+		</script>
+	</body>
+</html>
