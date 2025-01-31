@@ -1,9 +1,28 @@
 // 模拟数据库
-const usersMap = {}
-let userList = []
+let userList = [
+	{
+		id: 1,
+		token: '',
+		name: '王老大',
+		disconnect: false
+	},
+	{
+		id: 2,
+		token: '',
+		name: '郭先生',
+		disconnect: false
+	},
+	{
+		id: 3,
+		token: '',
+		name: '張小姐',
+		disconnect: false
+	}
+]
 
 class UserModel {
 	constructor(param) {
+		this.id = Math.floor(Math.random() * 1000000)
 		this.token = param.token
 		this.name = param.name
 		this.socketId = null
@@ -11,8 +30,7 @@ class UserModel {
 	}
 
 	save() {
-		usersMap[this.token] = this
-		userList = Object.values(usersMap)
+		userList.push(this)
 	}
 
 	update() {
@@ -26,13 +44,18 @@ class UserModel {
 			})
 			.map((e) => {
 				return {
+					id: e.id,
 					name: e.name,
 				}
 			})
 	}
 
+	static findById(id) {
+		return userList.find(e => e.id === id)
+	}
+
 	static findByToken(token) {
-		return usersMap[token]
+		return userList.find(e => e.token === token)
 	}
 
 	static findAll(param) {

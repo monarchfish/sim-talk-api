@@ -1,8 +1,10 @@
 const router = require('koa-router')()
 
-const userCtrl = require('../controllers/user')
+const userCtrl = require('../controllers/users')
 
-router.post('/user/register', userCtrl.register)
+router.get('/users', userCtrl.list)
+
+router.post('/users/register', userCtrl.register)
 
 router.allowedMethods()
 

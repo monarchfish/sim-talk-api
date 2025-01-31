@@ -1,5 +1,5 @@
 const socketIO = require('socket.io')
-const UserModel = require('../models/user')
+const UserModel = require('../models/users')
 
 let io = null
 
