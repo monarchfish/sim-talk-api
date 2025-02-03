@@ -13,18 +13,17 @@ class UserService {
 		const otherusers = UserModel.findAllValidUser()
 		const user = new UserModel(params)
 		user.save()
+
+		const userInfo = {
+			id: user.id,
+			name: user.name,
+		}
 	
-		console.log('now platers nums: ', otherusers.length + 1)
-	
-		sendNewuser({
-			name,
-		})
+		sendNewuser(userInfo)
 	
 		return {
 			token: token,
-			userInfo: {
-				name,
-			},
+			userInfo: userInfo,
 			otherusers: otherusers,
 		}
 	}

@@ -1,51 +1,79 @@
-const socketIO = require('socket.io')
-const UserModel = require('../models/users')
+const socketIO = require("socket.io");
+const UserModel = require("../models/users");
 
-let io = null
+let io = null;
 
 function initSocket(server) {
-	io = socketIO(server, {
-		cors: true,
-	})
+  io = socketIO(server, {
+    cors: true,
+  });
 
-	io.on('connection', (socket) => {
-		const token = socket.handshake.query.token
-		console.log('Client connected with token: ', token)
+  io.on("connection", (socket) => {
+    const token = socket.handshake.query.token;
+    const user = UserModel.findByToken(token);
 
-		const user = UserModel.findByToken(token)
-		if (user) {
-			user.socketId = socket.id
-			user.disconnect = false
-			user.update()
-		} else {
-			socket.emit('message', { msg: 'token无效' })
-			socket.disconnect(true)
-		}
+    if (user) {
+      console.log(
+        "Client connect success with token: ",
+        token,
+        " username: ",
+        user.name
+      );
 
-		socket.on('message', ({ msg }) => {
-			console.log(msg)
-		})
+      user.socketId = socket.id;
+      user.disconnect = false;
+      user.update();
+    } else {
+      console.log("Client connect failed with token: ", token);
+      socket.emit("info", { msg: "token无效" });
+      socket.disconnect(true);
+    }
 
-		socket.on('disconnect', () => {
-			console.log('A user disconnect.')
-			user.socketId = null
-			user.disconnect = true
-			io.emit('userLeave', {
-				userInfo: {
-					name: user.name,
-				},
-			})
-		})
-	})
+    socket.on("info", ({ msg }) => {
+      console.log("Received message:", msg);
+    });
+
+    socket.on("message", ({ receiver, content }) => {
+      if (receiver === user.id) return;
+
+      const sender = user.id;
+      const receiverSocketId = UserModel.findById(receiver).socketId;
+
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("message", {
+          sender: sender,
+          receiver: receiver,
+          content: content,
+        });
+      }
+      socket.emit("message", {
+        sender: sender,
+        receiver: receiver,
+        content: content,
+      });
+    });
+
+    socket.on("disconnect", () => {
+      console.log("A user disconnect.");
+      user.socketId = null;
+      user.disconnect = true;
+      io.emit("userLeave", {
+        userInfo: {
+          id: user.id,
+          name: user.name,
+        },
+      });
+    });
+  });
 }
 
 function sendNewuser(userInfo) {
-	if (!io) return
+  if (!io) return;
 
-	io.emit('newuser', { userInfo })
+  io.emit("newuser", { userInfo });
 }
 
 module.exports = {
-	initSocket,
-	sendNewuser,
-}
+  initSocket,
+  sendNewuser,
+};

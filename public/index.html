@@ -53,8 +53,12 @@
 						resove(socket)
 					})
 
+					socket.on('info', ({ msg }) => {
+						console.log('Received message:', msg)
+					})
+
 					socket.on('message', (data) => {
-						console.log('Received message:', data)
+						console.log(data)
 					})
 
 					socket.on('newUser', ({ userInfo }) => {
@@ -84,9 +88,18 @@
 
 				const socket = await initSocket(token)
 				
-				socket.emit('message', { msg: 'ononon' })
+				socket.emit('info', { msg: 'ononon' })
 
-				console.dir(await getUsers())
+				const userList = await getUsers()
+				
+				for (let index = 0; index < userList.length; index++) {
+					const receiver = userList[index].id;
+					
+					socket.emit('message', {
+						receiver: receiver,
+						content: 'hello ' + receiver
+					})
+				}
 			}
 
 			initapp()
